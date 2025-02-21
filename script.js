@@ -1,5 +1,5 @@
 const GITHUB_API_URL = "https://api.github.com";
-const GITHUB_TOKEN = "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";
+const GITHUB_TOKEN = "GH_TOKEN";
 const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
