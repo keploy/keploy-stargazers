@@ -112,7 +112,37 @@ body {
     transition: background-color 0.2s ease;
     border: 1px solid rgba(240,246,252,0.1);
   }
+
+  .excel-link{
+    margin-top: 10px;
+    display: none;
+    padding: 10px 20px;
+    background-color: #238636;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+    border: 1px solid rgba(240,246,252,0.1);
+  }
+
+.export-google-sheets{
+  margin-top: 10px;
+  display: none;
+  padding: 10px 20px;
+  background-color: #238636;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+  border: 1px solid rgba(240,246,252,0.1);
+}
+
+  .excel-link:hover{
+    background-color: #2ea043; 
   
+  }
   .download-link:hover {
     background-color: #2ea043;
   }
