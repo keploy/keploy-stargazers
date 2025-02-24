@@ -1,9 +1,17 @@
 const GITHUB_API_URL = "https://api.github.com";
-const GITHUB_TOKEN = "GH_TOKEN";
+const GITHUB_TOKEN = "";//token here
 const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
 document.getElementById("fetch-button").addEventListener("click", async () => {
+  await fetchStargazers(false);
+});
+
+document.getElementById("fetch-last-24h").addEventListener("click", async () => {
+  await fetchStargazers(true);
+});
+
+async function fetchStargazers(last24Hours = false) {
   const repoUrl = document.getElementById("repo-url").value;
   const repoPath = extractRepoPath(repoUrl);
 
@@ -14,16 +22,24 @@ document.getElementById("fetch-button").addEventListener("click", async () => {
 
   document.getElementById("loading").style.display = "block";
   document.getElementById("fetch-button").disabled = true;
+  document.getElementById("fetch-last-24h").disabled = true;
   document.getElementById("download-link").style.display = "none";
   document.getElementById("export-excel").style.display = "none";
 
   try {
-    const stargazers = await fetchAllStargazers(repoPath);
+    let stargazers = await fetchAllStargazers(repoPath);
+
+    if (last24Hours) {
+      const last24hTimestamp = new Date();
+      last24hTimestamp.setDate(last24hTimestamp.getDate() - 1);
+      
+      stargazers = stargazers.filter(star => new Date(star.starred_at) >= last24hTimestamp);
+    }
+
     const enrichedStargazers = await enrichStargazersInBatches(stargazers);
     const csvData = generateCSV(enrichedStargazers);
-    downloadCSV(csvData, "stargazers.csv");
+    downloadCSV(csvData, last24Hours ? "stargazers_last_24h.csv" : "stargazers.csv");
 
-    // Show the export buttons after data is fetched
     document.getElementById("download-link").style.display = "block";
     document.getElementById("export-excel").style.display = "block";
 
@@ -34,8 +50,9 @@ document.getElementById("fetch-button").addEventListener("click", async () => {
   } finally {
     document.getElementById("loading").style.display = "none";
     document.getElementById("fetch-button").disabled = false;
+    document.getElementById("fetch-last-24h").disabled = false;
   }
-});
+}
 
 function extractRepoPath(url) {
   const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
