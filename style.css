@@ -71,6 +71,29 @@ body {
     cursor: not-allowed;
     color: #8b949e;
   }
+
+  #fetch-last-24h {
+    padding: 10px 20px;
+    background-color: #238636;
+    color: #ffffff;
+    border: 1px solid rgba(240,246,252,0.1);
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  #fetch-last-24h:hover {
+    background-color: #2ea043;
+  }
+  
+  #fetch-last-24h:disabled {
+    background-color: #21262d;
+    cursor: not-allowed;
+    color: #8b949e;
+  }
+
+
   
   /* Loading Indicator */
   .loading {
