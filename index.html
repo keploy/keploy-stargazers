@@ -12,6 +12,7 @@
     <div class="input-group">
       <input type="text" id="repo-url" placeholder="Enter GitHub Repository URL (e.g., https://github.com/owner/repo)">
       <button id="fetch-button">Fetch Stargazers</button>
+      <button id="fetch-last-24h">Fetch Last 24 Hours</button>
     </div>
     <div id="loading" class="loading">
       <div class="spinner"></div>
@@ -19,7 +20,6 @@
     </div>
     <a id="download-link" class="download-link" href="#" style="display: none;">Download CSV</a>
     <a id="export-excel" class="excel-link">Export to Excel</a>
-    
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
