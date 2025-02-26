@@ -31,12 +31,13 @@ body {
   /* Input Group */
   .input-group {
     display: flex;
+    flex-direction: column;
     gap: 10px;
     margin-bottom: 1.5rem;
   }
   
   #repo-url {
-    flex: 1;
+    width: 100%;
     padding: 10px;
     border: 1px solid #30363d;
     border-radius: 6px;
@@ -50,8 +51,31 @@ body {
     border-color: #58a6ff;
     box-shadow: 0 0 0 3px rgba(56,139,253,0.15);
   }
+
+  #github-token {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    background-color: #0d1117;
+    color: #c9d1d9;
+  }
+  
+  #github-token:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 3px rgba(56,139,253,0.15);
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
   
   #fetch-button {
+    flex: 1;
     padding: 10px 20px;
     background-color: #238636;
     color: #ffffff;
@@ -73,6 +97,7 @@ body {
   }
 
   #fetch-last-24h {
+    flex: 1;
     padding: 10px 20px;
     background-color: #238636;
     color: #ffffff;
@@ -92,8 +117,6 @@ body {
     cursor: not-allowed;
     color: #8b949e;
   }
-
-
   
   /* Loading Indicator */
   .loading {
@@ -136,7 +159,7 @@ body {
     border: 1px solid rgba(240,246,252,0.1);
   }
 
-  .excel-link{
+  .excel-link {
     margin-top: 10px;
     display: none;
     padding: 10px 20px;
@@ -149,23 +172,23 @@ body {
     border: 1px solid rgba(240,246,252,0.1);
   }
 
-.export-google-sheets{
-  margin-top: 10px;
-  display: none;
-  padding: 10px 20px;
-  background-color: #238636;
-  color: #ffffff;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: background-color 0.2s ease;
-  border: 1px solid rgba(240,246,252,0.1);
-}
-
-  .excel-link:hover{
-    background-color: #2ea043; 
-  
+  .export-google-sheets {
+    margin-top: 10px;
+    display: none;
+    padding: 10px 20px;
+    background-color: #238636;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+    border: 1px solid rgba(240,246,252,0.1);
   }
+
+  .excel-link:hover {
+    background-color: #2ea043;
+  }
+  
   .download-link:hover {
     background-color: #2ea043;
   }
