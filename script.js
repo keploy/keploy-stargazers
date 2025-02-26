@@ -1,10 +1,9 @@
 const GITHUB_API_URL = "https://api.github.com";
-const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
 const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
 document.getElementById("fetch-button").addEventListener("click", async () => {
-  await fetchStargazers(false);
+  await fetchStargazers(false);  
 });
 
 document.getElementById("fetch-last-24h").addEventListener("click", async () => {
@@ -13,10 +12,11 @@ document.getElementById("fetch-last-24h").addEventListener("click", async () => 
 
 async function fetchStargazers(last24Hours = false) {
   const repoUrl = document.getElementById("repo-url").value;
+  const githubToken = document.getElementById("github-token").value;
   const repoPath = extractRepoPath(repoUrl);
 
-  if (!repoPath) {
-    alert("Invalid GitHub repository URL");
+  if (!repoPath || !githubToken) {
+    alert("Invalid GitHub repository URL or token");
     return;
   }
 
@@ -27,7 +27,7 @@ async function fetchStargazers(last24Hours = false) {
   document.getElementById("export-excel").style.display = "none";
 
   try {
-    let stargazers = await fetchAllStargazers(repoPath);
+    let stargazers = await fetchAllStargazers(repoPath, githubToken);
 
     if (last24Hours) {
       const last24hTimestamp = new Date();
@@ -36,7 +36,7 @@ async function fetchStargazers(last24Hours = false) {
       stargazers = stargazers.filter(star => new Date(star.starred_at) >= last24hTimestamp);
     }
 
-    const enrichedStargazers = await enrichStargazersInBatches(stargazers);
+    const enrichedStargazers = await enrichStargazersInBatches(stargazers, githubToken);
     const csvData = generateCSV(enrichedStargazers);
     downloadCSV(csvData, last24Hours ? "stargazers_last_24h.csv" : "stargazers.csv");
 
@@ -59,7 +59,7 @@ function extractRepoPath(url) {
   return match ? match[1] : null;
 }
 
-async function fetchAllStargazers(repoPath) {
+async function fetchAllStargazers(repoPath, githubToken) {
   let stargazers = [];
   let page = 1;
   let hasMore = true;
@@ -67,7 +67,7 @@ async function fetchAllStargazers(repoPath) {
   while (hasMore) {
     const response = await fetch(`${GITHUB_API_URL}/repos/${repoPath}/stargazers?page=${page}&per_page=100`, {
       headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
+        Authorization: `token ${githubToken}`,
         Accept: "application/vnd.github.v3.star+json",
       },
     });
@@ -85,14 +85,14 @@ async function fetchAllStargazers(repoPath) {
   return stargazers;
 }
 
-async function enrichStargazersInBatches(stargazers) {
+async function enrichStargazersInBatches(stargazers, githubToken) {
   const enrichedStargazers = [];
 
   for (let i = 0; i < stargazers.length; i += BATCH_SIZE) {
     const batch = stargazers.slice(i, i + BATCH_SIZE);
     const enrichedBatch = await Promise.all(
       batch.map(async (stargazer) => {
-        const userDetails = await fetchUserDetailsWithRetry(stargazer.user.login);
+        const userDetails = await fetchUserDetailsWithRetry(stargazer.user.login, githubToken);
         return {
           username: stargazer.user.login,
           email: userDetails.email || "N/A",
@@ -110,11 +110,11 @@ async function enrichStargazersInBatches(stargazers) {
   return enrichedStargazers;
 }
 
-async function fetchUserDetailsWithRetry(username, retries = 3) {
+async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(`${GITHUB_API_URL}/users/${username}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` },
+        headers: { Authorization: `token ${githubToken}` },
       });
 
       if (!response.ok) {
