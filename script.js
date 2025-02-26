@@ -1,5 +1,5 @@
 const GITHUB_API_URL = "https://api.github.com";
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
 const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
