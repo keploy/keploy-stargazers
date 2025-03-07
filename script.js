@@ -3,7 +3,7 @@ const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
 document.getElementById("fetch-button").addEventListener("click", async () => {
-  await fetchStargazers(false);  
+  await fetchStargazers(false);
 });
 
 document.getElementById("fetch-last-24h").addEventListener("click", async () => {
@@ -95,10 +95,13 @@ async function enrichStargazersInBatches(stargazers, githubToken) {
         const userDetails = await fetchUserDetailsWithRetry(stargazer.user.login, githubToken);
         return {
           username: stargazer.user.login,
-          email: userDetails.email || "N/A",
-          linkedin: userDetails.blog && userDetails.blog.includes("linkedin.com") ? userDetails.blog : "N/A",
-          twitter: userDetails.twitter_username ? `https://twitter.com/${userDetails.twitter_username}` : "N/A",
           profile_url: stargazer.user.html_url,
+          email: userDetails.email || "N/A",
+          company: userDetails.company || "N/A",
+          location: userDetails.location || "N/A",
+          website: userDetails.blog || "N/A",
+          linkedin: extractLinkedIn(userDetails),
+          twitter: userDetails.twitter_username ? `https://twitter.com/${userDetails.twitter_username}` : "N/A",
         };
       })
     );
@@ -134,14 +137,27 @@ async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
   }
 }
 
+function extractLinkedIn(userDetails) {
+  if (userDetails.blog && userDetails.blog.includes("linkedin.com")) {
+    return userDetails.blog;
+  }
+  if (userDetails.bio && userDetails.bio.includes("linkedin.com")) {
+    return userDetails.bio.match(/https?:\/\/[^\s]+linkedin.com[^\s]+/i)?.[0] || "N/A";
+  }
+  return "N/A";
+}
+
 function generateCSV(stargazers) {
-  const headers = ["Username", "Email", "LinkedIn", "Twitter", "Profile URL"];
+  const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter"];
   const rows = stargazers.map(stargazer => [
     stargazer.username,
+    stargazer.profile_url,
     stargazer.email,
+    stargazer.company,
+    stargazer.location,
+    stargazer.website,
     stargazer.linkedin,
     stargazer.twitter,
-    stargazer.profile_url,
   ]);
 
   const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
