@@ -102,6 +102,7 @@ async function enrichStargazersInBatches(stargazers, githubToken) {
           website: userDetails.blog || "N/A",
           linkedin: extractLinkedIn(userDetails),
           twitter: userDetails.twitter_username ? `https://twitter.com/${userDetails.twitter_username}` : "N/A",
+          bio: userDetails.bio || "N/A",
         };
       })
     );
@@ -111,6 +112,13 @@ async function enrichStargazersInBatches(stargazers, githubToken) {
   }
 
   return enrichedStargazers;
+}
+
+function extractLinkedIn(userDetails) {
+  if (userDetails.blog && userDetails.blog.includes("linkedin.com")) {
+    return userDetails.blog;
+  }
+  return "N/A";
 }
 
 async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
@@ -137,18 +145,8 @@ async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
   }
 }
 
-function extractLinkedIn(userDetails) {
-  if (userDetails.blog && userDetails.blog.includes("linkedin.com")) {
-    return userDetails.blog;
-  }
-  if (userDetails.bio && userDetails.bio.includes("linkedin.com")) {
-    return userDetails.bio.match(/https?:\/\/[^\s]+linkedin.com[^\s]+/i)?.[0] || "N/A";
-  }
-  return "N/A";
-}
-
 function generateCSV(stargazers) {
-  const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter"];
+  const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter", "Bio"];
   const rows = stargazers.map(stargazer => [
     stargazer.username,
     stargazer.profile_url,
@@ -158,18 +156,21 @@ function generateCSV(stargazers) {
     stargazer.website,
     stargazer.linkedin,
     stargazer.twitter,
+    stargazer.bio,
   ]);
 
   const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
   return csvContent;
 }
 
-function downloadCSV(data, filename) {
-  const blob = new Blob([data], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const link = document.getElementById("download-link");
-  link.href = url;
+function downloadCSV(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
   link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function exportToExcel(stargazers) {
