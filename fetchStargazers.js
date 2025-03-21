@@ -2,12 +2,12 @@ const fs = require("fs");
 const fetch = require("node-fetch");
 
 const GITHUB_API_URL = "https://api.github.com";
-const REPO_PATH = "keploy/keploy"; // Change if needed
+const REPO_PATH = "keploy/keploy"; 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const OUTPUT_FILE_ALL = "data/stargazers.json";
 const OUTPUT_FILE_24H = "data/stargazers_last_24h.json";
 
-// Check for command-line argument (e.g., "node fetchStargazers.js last24h")
+// arguments are checked here
 const last24Hours = process.argv.includes("last24h");
 
 async function fetchStargazers() {
@@ -37,15 +37,15 @@ async function fetchStargazers() {
     const data = await response.json();
 
     if (last24Hours) {
-      // ✅ Filter only stargazers from the last 24 hours
+      // sirf last 24 hours wali ko filter krne k lie
       const filteredData = data.filter(star => new Date(star.starred_at) >= last24hTimestamp);
       stargazers = stargazers.concat(filteredData);
     } else {
-      // ✅ Fetch all stargazers
+      //Fetch all stargazers
       stargazers = stargazers.concat(data);
     }
 
-    hasMore = data.length === 100; // Continue fetching if there are more pages
+    hasMore = data.length === 100;
     page++;
   }
 
@@ -54,6 +54,4 @@ async function fetchStargazers() {
 
   console.log(`Fetched ${stargazers.length} stargazers${last24Hours ? " from the last 24 hours" : ""}.`);
 }
-
-// Run script
 fetchStargazers().catch(console.error);
