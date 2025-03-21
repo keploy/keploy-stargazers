@@ -1,65 +1,15 @@
+import * as XLSX from 'xlsx';
+
 const GITHUB_API_URL = "https://api.github.com";
 const BATCH_SIZE = 50;
 const DELAY_BETWEEN_REQUESTS = 2000;
 
-document.getElementById("fetch-button").addEventListener("click", async () => {
-  await fetchStargazers(false);
-});
-
-document.getElementById("fetch-last-24h").addEventListener("click", async () => {
-  await fetchStargazers(true);
-});
-
-async function fetchStargazers(last24Hours = false) {
-  const repoUrl = document.getElementById("repo-url").value;
-  const githubToken = document.getElementById("github-token").value;
-  const repoPath = extractRepoPath(repoUrl);
-
-  if (!repoPath || !githubToken) {
-    alert("Invalid GitHub repository URL or token");
-    return;
-  }
-
-  document.getElementById("loading").style.display = "block";
-  document.getElementById("fetch-button").disabled = true;
-  document.getElementById("fetch-last-24h").disabled = true;
-  document.getElementById("download-link").style.display = "none";
-  document.getElementById("export-excel").style.display = "none";
-
-  try {
-    let stargazers = await fetchAllStargazers(repoPath, githubToken);
-
-    if (last24Hours) {
-      const last24hTimestamp = new Date();
-      last24hTimestamp.setDate(last24hTimestamp.getDate() - 1);
-      
-      stargazers = stargazers.filter(star => new Date(star.starred_at) >= last24hTimestamp);
-    }
-
-    const enrichedStargazers = await enrichStargazersInBatches(stargazers, githubToken);
-    const csvData = generateCSV(enrichedStargazers);
-    downloadCSV(csvData, last24Hours ? "stargazers_last_24h.csv" : "stargazers.csv");
-
-    document.getElementById("download-link").style.display = "block";
-    document.getElementById("export-excel").style.display = "block";
-
-    document.getElementById("export-excel").addEventListener("click", () => exportToExcel(enrichedStargazers));
-  } catch (error) {
-    console.error("Error fetching stargazers:", error);
-    alert("Failed to fetch stargazers. Check the console for details.");
-  } finally {
-    document.getElementById("loading").style.display = "none";
-    document.getElementById("fetch-button").disabled = false;
-    document.getElementById("fetch-last-24h").disabled = false;
-  }
-}
-
-function extractRepoPath(url) {
+export const extractRepoPath = (url) => {
   const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
   return match ? match[1] : null;
-}
+};
 
-async function fetchAllStargazers(repoPath, githubToken) {
+export const fetchAllStargazers = async (repoPath, githubToken) => {
   let stargazers = [];
   let page = 1;
   let hasMore = true;
@@ -83,9 +33,9 @@ async function fetchAllStargazers(repoPath, githubToken) {
   }
 
   return stargazers;
-}
+};
 
-async function enrichStargazersInBatches(stargazers, githubToken) {
+export const enrichStargazersInBatches = async (stargazers, githubToken) => {
   const enrichedStargazers = [];
 
   for (let i = 0; i < stargazers.length; i += BATCH_SIZE) {
@@ -112,16 +62,16 @@ async function enrichStargazersInBatches(stargazers, githubToken) {
   }
 
   return enrichedStargazers;
-}
+};
 
-function extractLinkedIn(userDetails) {
+const extractLinkedIn = (userDetails) => {
   if (userDetails.blog && userDetails.blog.includes("linkedin.com")) {
     return userDetails.blog;
   }
   return "N/A";
-}
+};
 
-async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
+const fetchUserDetailsWithRetry = async (username, githubToken, retries = 3) => {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(`${GITHUB_API_URL}/users/${username}`, {
@@ -143,9 +93,9 @@ async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
       await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
     }
   }
-}
+};
 
-function generateCSV(stargazers) {
+export const generateCSV = (stargazers) => {
   const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter", "Bio"];
   const rows = stargazers.map(stargazer => [
     stargazer.username,
@@ -161,9 +111,9 @@ function generateCSV(stargazers) {
 
   const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
   return csvContent;
-}
+};
 
-function downloadCSV(csvContent, filename) {
+export const downloadCSV = (csvContent, filename) => {
   const blob = new Blob([csvContent], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -171,11 +121,11 @@ function downloadCSV(csvContent, filename) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-}
+};
 
-function exportToExcel(stargazers) {
+export const exportToExcel = (stargazers) => {
   const ws = XLSX.utils.json_to_sheet(stargazers);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Stargazers");
   XLSX.writeFile(wb, "stargazers.xlsx");
-}
+};
