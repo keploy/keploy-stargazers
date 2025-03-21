@@ -23,7 +23,7 @@ async function fetchStargazers() {
       `${GITHUB_API_URL}/repos/${REPO_PATH}/stargazers?page=${page}&per_page=100`,
       {
         headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
+          Authorization: `token ${secrets.MY_GITHUB_TOKEN}`,
           Accept: "application/vnd.github.v3.star+json",
         },
       }
