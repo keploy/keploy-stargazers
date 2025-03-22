@@ -1,30 +1,31 @@
-
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
-async function getGitHubToken() {
-  const response = await fetch("/get-token");
-  const data = await response.json();
-  return data.token;
-}
+
+let GITHUB_TOKENS=[];
+
+
 let currentTokenIndex = 0;
 const DELAY_BETWEEN_REQUESTS = 2000;
 const CACHE_KEY = "cachedStargazers";
 
-
+// Helper: Rotate API Tokens
 function getNextToken() {
   currentTokenIndex = (currentTokenIndex + 1) % GITHUB_TOKENS.length;
   return GITHUB_TOKENS[currentTokenIndex];
 }
 
-
+// Helper: Cache Stargazers
 function cacheStargazers(stargazers) {
   localStorage.setItem(CACHE_KEY, JSON.stringify(stargazers));
 }
+
+// Helper: Get Cached Stargazers
 function getCachedStargazers() {
   return JSON.parse(localStorage.getItem(CACHE_KEY)) || [];
 }
 
-
+// Fetch Stargazers using GraphQL
 async function fetchStargazers(repoPath, last24Hours = false) {
+
   let [owner, repo] = repoPath.split("/");
   let stargazers = [];
   let afterCursor = null;
@@ -59,7 +60,7 @@ async function fetchStargazers(repoPath, last24Hours = false) {
             }
           }
         `,
-        variables: { owner, repo, after: afterCursor },
+        variables: { owner, repo, after: afterCursor ||null},
       };
 
       const response = await fetchWithBackoff(GITHUB_GRAPHQL_URL, {
@@ -106,13 +107,17 @@ async function fetchStargazers(repoPath, last24Hours = false) {
     console.error("Error fetching stargazers:", error);
     alert("Failed to fetch stargazers. Check the console.");
   } finally {
+    console.log("🔹 Stargazers Data Fetched:", stargazers);
+
     document.getElementById("loading").style.display = "none";
   }
 }
 
+// Exponential Backoff for API Requests
 async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
   for (let i = 0; i < retries; i++) {
     try {
+
       const response = await fetch(url, options);
       if (response.status === 403) {
         await new Promise((resolve) => setTimeout(resolve, delay));
@@ -127,6 +132,7 @@ async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
   throw new Error("Failed after retries");
 }
 
+// Extract LinkedIn from Website URL
 function extractLinkedIn(user) {
   if (user.website && user.website.includes("linkedin.com")) {
     return user.website;
@@ -134,6 +140,7 @@ function extractLinkedIn(user) {
   return "N/A";
 }
 
+// Convert Stargazers to CSV and Download
 function generateCSV(stargazers) {
   const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter", "Bio"];
   const rows = stargazers.map((s) => [
@@ -158,9 +165,16 @@ function generateCSV(stargazers) {
   document.body.removeChild(link);
 }
 
+// Event Listeners
+
+
 document.getElementById("fetch-button").addEventListener("click", () => {
   const repoUrl = document.getElementById("repo-url").value;
   const repoPath = extractRepoPath(repoUrl);
+  const tokenInput = document.getElementById("github-token");
+  if (!tokenInput) return alert("GitHub token input not found!");
+
+  GITHUB_TOKENS = tokenInput.value.trim().split(",").map(token=>token.trim());
   if (!repoPath) return alert("Invalid GitHub URL");
   fetchStargazers(repoPath, false);
 });
@@ -168,11 +182,16 @@ document.getElementById("fetch-button").addEventListener("click", () => {
 document.getElementById("fetch-last-24h").addEventListener("click", () => {
   const repoUrl = document.getElementById("repo-url").value;
   const repoPath = extractRepoPath(repoUrl);
+  const tokenInput = document.getElementById("github-token");
+  if (!tokenInput) return alert("GitHub token input not found!");
+
+  GITHUB_TOKENS = tokenInput.value.trim().split(",").map(token=>token.trim());
+
   if (!repoPath) return alert("Invalid GitHub URL");
   fetchStargazers(repoPath, true);
 });
 
-
+// Extract Repository Path
 function extractRepoPath(url) {
   const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
   return match ? match[1] : null;
