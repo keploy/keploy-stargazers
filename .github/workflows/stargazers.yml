@@ -23,7 +23,7 @@ jobs:
 
       - name: Fetch Stargazers
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: node fetchStargazers.js
 
       - name: Commit and push if changes exist
