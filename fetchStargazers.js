@@ -32,8 +32,8 @@ async function fetchStargazers() {
         `${GITHUB_API_URL}/repos/${REPO_PATH}/stargazers?page=${page}&per_page=100`,
         {
           headers: {
-            Authorization: `token ${GITHUB_TOKEN}`,
-            Accept: "application/vnd.github.v3.star+json",
+            "Authorization": `token ${GITHUB_TOKEN}`,
+            "Accept": "application/vnd.github.v3.star+json",
           },
         }
       );
@@ -50,11 +50,13 @@ async function fetchStargazers() {
         break;
       }
 
-      let fetchedStargazers = data.map(star => ({
-        username: star.user?.login || "N/A",
-        profile_url: star.user?.html_url || "N/A",
-        starred_at: star.starred_at,
-      }));
+      let fetchedStargazers = data
+        .filter(star => star.user) // Ensure user data exists
+        .map(star => ({
+          username: star.user?.login || "N/A",
+          profile_url: star.user?.html_url || "N/A",
+          starred_at: star.starred_at,
+        }));
 
       if (last24Hours) {
         fetchedStargazers = fetchedStargazers.filter(star => new Date(star.starred_at) >= last24hTimestamp);
