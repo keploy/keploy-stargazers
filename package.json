@@ -1,0 +1,23 @@
+{
+  "name": "keploy-stargazers",
+  "version": "1.0.0",
+  "description": "Automated GitHub stargazers data fetching for Keploy repositories",
+  "main": "fetch-stargazers.js",
+  "scripts": {
+    "start": "node fetch-stargazers.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keploy/keploy-stargazers.git"
+  },
+  "keywords": [
+    "github",
+    "stargazers",
+    "keploy"
+  ],
+  "author": "Keploy Team",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.6.9"
+  }
+} 
