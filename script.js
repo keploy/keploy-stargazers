@@ -179,3 +179,36 @@ function exportToExcel(stargazers) {
   XLSX.utils.book_append_sheet(wb, ws, "Stargazers");
   XLSX.writeFile(wb, "stargazers.xlsx");
 }
+
+const themeToggle = document.getElementById("theme-toggle");
+const themeLabel = document.getElementById("theme-label"); // Button label
+const body = document.body;
+const fetchButton = document.getElementById("fetch-button");
+const fetchLast24hButton = document.getElementById("fetch-last-24h");
+
+function updateTheme(isLightMode) {
+    // Toggle class
+    body.classList.toggle("light-mode", isLightMode);
+
+    // Update button styles
+    fetchButton.style.backgroundColor = isLightMode ? "#0078d4" : "#238636";
+    fetchLast24hButton.style.backgroundColor = isLightMode ? "#6a737d" : "#5a6268";
+
+    // Update toggle button text
+    themeLabel.textContent = isLightMode ? "Light Mode" : "Dark Mode";
+
+    // Save user preference
+    localStorage.setItem("theme", isLightMode ? "light" : "dark");
+}
+
+// Event Listener for Theme Toggle
+themeToggle.addEventListener("change", function() {
+    updateTheme(themeToggle.checked);
+});
+
+// Load saved theme preference on page load
+window.onload = function() {
+    const savedTheme = localStorage.getItem("theme") === "light";
+    themeToggle.checked = savedTheme;
+    updateTheme(savedTheme);
+};

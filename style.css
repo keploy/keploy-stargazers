@@ -192,3 +192,150 @@ body {
   .download-link:hover {
     background-color: #2ea043;
   }
+  body {
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Input Styling */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 1rem; /* Reduced margin for better spacing */
+}
+
+/* Moved Buttons Outside Input Box */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Theme Toggle Positioning */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+/* Light Mode Styling */
+body.light-mode {
+    background-color: #f4f4f4;
+    color: #222;
+}
+
+/* Light Mode Inputs */
+body.light-mode #repo-url, 
+body.light-mode #github-token {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #bbb;
+}
+
+/* Light Mode Buttons */
+body.light-mode #fetch-button,
+body.light-mode #fetch-last-24h {
+    background-color: #0078d4;
+    color: white;
+}
+
+body.light-mode #fetch-button:hover,
+body.light-mode #fetch-last-24h:hover {
+    background-color: #005ea3;
+}
+
+/* Dark Mode Buttons */
+#fetch-button, #fetch-last-24h {
+    padding: 12px 20px;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#fetch-button {
+    background-color: #238636;
+    border: 1px solid rgba(240,246,252,0.1);
+}
+
+#fetch-last-24h {
+    background-color: #6a7d6c;
+}
+
+#fetch-button:hover {
+    background-color: #2ea043;
+}
+
+#fetch-last-24h:hover {
+    background-color: #5a6268;
+}
+
+/* Theme Toggle */
+.switch {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    margin-left: 10px;
+
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #238636;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.theme-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+#theme-label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #c9d1d9;
+  position: absolute;
+    right: 60px;
+    top: 10px;
+}
+
+/* Light mode styles */
+body.light-mode #theme-label {
+  color: #0d1117;
+}
+

@@ -7,7 +7,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+   <!-- Theme Toggle -->
+   <div class="theme-toggle">
+    <label class="switch">
+        <input type="checkbox" id="theme-toggle">
+        <span class="slider round"></span>
+    </label>
+    <div class="theme-toggle-container">
+      <label id="theme-label" for="theme-toggle">Dark Mode</label> <!-- Dynamic Text -->
+  </div>
+</div>
   <div class="container">
+    
     <h1>GitHub Stargazers Data</h1>
     <div class="input-group">
       <input type="text" id="repo-url" placeholder="Enter GitHub Repository URL (e.g., https://github.com/owner/repo)">
@@ -15,6 +26,8 @@
       <button id="fetch-button">Fetch Stargazers</button>
       <button id="fetch-last-24h">Fetch Last 24 Hours</button>
     </div>
+   
+
     <div id="loading" class="loading">
       <div class="spinner"></div>
       <span>Loading...</span>
