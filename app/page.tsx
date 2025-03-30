@@ -12,13 +12,13 @@ import {
   enrichStargazers,
 } from "@/services/githubServices";
 
-// const GITHUB_API_URL = "https://api.github.com";
-// const BATCH_SIZE = 50;
-// const DELAY_BETWEEN_REQUESTS = 2000;
+import { Eye, EyeOff } from "lucide-react";
+
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
   const [githubToken, setGithubToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stargazers, setStargazers] = useState<any[]>([]);
   const [last24Hours, setLast24Hours] = useState<boolean>(false);
@@ -70,14 +70,23 @@ export default function Home() {
         onChange={(e) => setRepoUrl(e.target.value)}
         className="border p-2 mb-2 w-full max-w-md"
       />
-      <Input
-        type="password"
-        placeholder="Enter GitHub Token"
-        value={githubToken}
-        onChange={(e) => setGithubToken(e.target.value)}
-        className="border p-2 mb-2 w-full max-w-md"
-      />
-      <div className="flex gap-4">
+      <div className="relative w-full max-w-md">
+        <Input
+          type={showToken ? "text" : "password"}
+          placeholder="Enter GitHub Token"
+          value={githubToken}
+          onChange={(e) => setGithubToken(e.target.value)}
+          className="border p-2 w-full"
+        />
+        <button
+          type="button"
+          className="absolute inset-y-0 right-2 flex items-center"
+          onClick={() => setShowToken(!showToken)}
+        >
+          {showToken ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
+      <div className="flex gap-4 mt-2">
         <Button
           onClick={() => handleFetchStargazers(false)}
           className="bg-blue-500 text-white p-2"
