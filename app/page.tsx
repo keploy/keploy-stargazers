@@ -71,7 +71,7 @@ export default function Home() {
         className="border p-2 mb-2 w-full max-w-md"
       />
       <Input
-        type="text"
+        type="password"
         placeholder="Enter GitHub Token"
         value={githubToken}
         onChange={(e) => setGithubToken(e.target.value)}
