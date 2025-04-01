@@ -13,7 +13,14 @@ import {
 } from "@/services/githubServices";
 
 import { Eye, EyeOff } from "lucide-react";
-
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
@@ -23,7 +30,6 @@ export default function Home() {
   const [stargazers, setStargazers] = useState<any[]>([]);
   const [last24Hours, setLast24Hours] = useState<boolean>(false);
   const [hasFetched, setHasFetched] = useState(false);
-
 
   const handleFetchStargazers = async (last24Hours = false) => {
     if (!repoUrl || !githubToken) {
@@ -61,55 +67,71 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center p-6">
-      <h1 className="text-2xl font-bold mb-4">GitHub Stargazers Data</h1>
-      <Input
-        type="text"
-        placeholder="Enter GitHub Repository URL"
-        value={repoUrl}
-        onChange={(e) => setRepoUrl(e.target.value)}
-        className="border p-2 mb-2 w-full max-w-md"
-      />
-      <div className="relative w-full max-w-md">
-        <Input
-          type={showToken ? "text" : "password"}
-          placeholder="Enter GitHub Token"
-          value={githubToken}
-          onChange={(e) => setGithubToken(e.target.value)}
-          className="border p-2 w-full"
-        />
-        <button
-          type="button"
-          className="absolute inset-y-0 right-2 flex items-center"
-          onClick={() => setShowToken(!showToken)}
-        >
-          {showToken ? <EyeOff size={20} /> : <Eye size={20} />}
-        </button>
-      </div>
-      <div className="flex gap-4 mt-2">
-        <Button
-          onClick={() => handleFetchStargazers(false)}
-          className="bg-blue-500 text-white p-2"
-        >
-          Fetch Stargazers
-        </Button>
-        <Button
-          onClick={() => handleFetchStargazers(true)}
-          className="bg-green-500 text-white p-2"
-        >
-          Fetch Last 24H
-        </Button>
-      </div>
-      {loading && <Loading />}
-      {hasFetched && stargazers.length > 0 ? (
-        <DataExport
-          stargazers={stargazers}
-          last24Hours={last24Hours}
-          setLast24Hours={setLast24Hours}
-        />
-      ) : hasFetched && !loading ? (
-        <p className="mt-4 text-gray-500">No data available</p>
-      ) : null}
+    <div className="flex flex-col items-center justify-center h-screen w-screen bg-[#0D1117]">
+      <Card className="w-[500px] flex flex-col items-center p-6 bg-[#161B22]">
+        <CardHeader>
+          <CardTitle className="text-[#C9D1D9] text-3xl">GitHub Stargazers Data</CardTitle>
+        </CardHeader>
+        <CardContent className="w-[500px]">
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name" className="text-[#C9D1D9]">Github Repository URL</Label>
+                <Input
+                  type="text"
+                  placeholder="Enter GitHub Repository URL (e.g., https://github.com/owner/repo)"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                  className="border p-2 mb-2 w-full max-w-md bg-[#0D1117] text-white"
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name" className="text-[#C9D1D9]">Your Personal Token</Label>
+                <div className="relative w-full max-w-md">
+                  <Input
+                    type={showToken ? "text" : "password"}
+                    placeholder="Enter GitHub Token"
+                    value={githubToken}
+                    onChange={(e) => setGithubToken(e.target.value)}
+                    className="border p-2 w-full bg-[#0D1117] text-white"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-2 flex items-center"
+                    onClick={() => setShowToken(!showToken)}
+                  >
+                    {showToken ? <Eye size={20} className="text-white"  /> : <EyeOff size={20} className="text-white" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center space-y-4 w-[500px]">
+          <Button
+            onClick={() => handleFetchStargazers(false)}
+            className="bg-green-500 text-white p-2 w-full"
+          >
+            Fetch Stargazers
+          </Button>
+          <Button
+            onClick={() => handleFetchStargazers(true)}
+            className="bg-green-500 text-white p-2 w-full"
+          >
+            Fetch Last 24H
+          </Button>
+        </CardFooter>
+        {loading && <Loading />}
+        {hasFetched && stargazers.length > 0 ? (
+          <DataExport
+            stargazers={stargazers}
+            last24Hours={last24Hours}
+            setLast24Hours={setLast24Hours}
+          />
+        ) : hasFetched && !loading ? (
+          <p className="mt-4 text-gray-500">No data available</p>
+        ) : null}
+      </Card>
     </div>
   );
 }

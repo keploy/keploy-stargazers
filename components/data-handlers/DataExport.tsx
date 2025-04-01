@@ -21,18 +21,22 @@ const DataExport: React.FC<DataExportProps> = ({ stargazers, last24Hours, setLas
       "Twitter",
       "Bio",
     ];
+    const DataHeaders =  [
+      "username",
+      "profile_url",
+      "email",
+      "company",
+      "location",
+      "Website",
+      "LinkedIn",
+      "Twitter",
+      "Bio",
+    ]
     const rows = stargazers.map((s) =>
-      [
-        s.username,
-        s.profile_url,
-        s.email,
-        s.company,
-        s.location,
-        s.Website,
-        s.LinkedIn,
-        s.Twitter,
-        s.Bio,
-      ].join(",")
+      DataHeaders.map((header) => {
+        const value = s[header] ?? "N/A";
+        return `"${String(value).replace(/"/g, '""')}"`;
+      }).join(",")
     );
     const csvContent = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -52,11 +56,11 @@ const DataExport: React.FC<DataExportProps> = ({ stargazers, last24Hours, setLas
   };
 
   return (
-    <div className="mt-4 flex gap-4">
-      <Button onClick={exportToCSV} className="bg-yellow-500 text-white p-2">
+    <div className="flex flex-col items-center space-y-4 w-full">
+      <Button onClick={exportToCSV} className="bg-green-500 text-white p-2 w-full">
         Download CSV
       </Button>
-      <Button onClick={exportToExcel} className="bg-purple-500 text-white p-2">
+      <Button onClick={exportToExcel} className="bg-green-500 text-white p-2 w-full">
         Export to Excel
       </Button>
     </div>
