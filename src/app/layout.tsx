@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GitHub Stargazers Export",
-  description: "GitHub Stargazers Export",
+  title: " Keploy Stargazers",
+  description: "Track and maintain a record of all stargazers on the Keploy repository with this streamlined application",
 };
 
 export default function RootLayout({
