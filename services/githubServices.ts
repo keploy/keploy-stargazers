@@ -54,10 +54,10 @@ export const enrichStargazers = async (stargazers: any[], token: string) => {
           email: userDetails?.email || "N/A",
           company: userDetails?.company || "N/A",
           location: userDetails?.location || "N/A",
-          Website: userDetails?.Website || "NA",
-          LinkedIn: userDetails?.LinkedIn || "N/A",
-          Twitter: userDetails?.Twitter || "N/A",
-          Bio: userDetails?.Bio || "N/A",
+          Website: userDetails?.blog || "NA",
+          LinkedIn: userDetails?.linkedIn_username || "N/A",
+          Twitter: userDetails?.twitter_username || "N/A",
+          Bio: userDetails?.bio || "N/A",
         };
       })
     );
