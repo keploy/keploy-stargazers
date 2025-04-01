@@ -1,29 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub Stargazers Export</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Stargazers Fetcher</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>GitHub Stargazers Data</h1>
-    <div class="input-group">
-      <input type="text" id="repo-url" placeholder="Enter GitHub Repository URL (e.g., https://github.com/owner/repo)">
-      <input type="text" id="github-token" placeholder="Enter GitHub Token">
-      <button id="fetch-button">Fetch Stargazers</button>
-      <button id="fetch-last-24h">Fetch Last 24 Hours</button>
-    </div>
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <span>Loading...</span>
-    </div>
-    <a id="download-link" class="download-link" href="#" style="display: none;">Download CSV</a>
-    <a id="export-excel" class="excel-link">Export to Excel</a>
-  </div>
+    <div class="container">
+        <h1>GitHub Stargazers Manager</h1>
+        
+        <div class="control-panel">
+            <div class="input-group">
+                <label for="ownerInput">Repository Owner:</label>
+                <input type="text" id="ownerInput" placeholder="keploy">
+            </div>
+            
+            <div class="input-group">
+                <label for="repoInput">Repository Name:</label>
+                <input type="text" id="repoInput" placeholder="keploy">
+            </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="script.js"></script>
+            <div class="token-container">
+                <label>GitHub Tokens:</label>
+                <div id="tokenList">
+                    <div class="token-input">
+                        <input type="text" class="tokenField" placeholder="Enter GitHub Token">
+                        <button class="removeToken">❌</button>
+                    </div>
+                </div>
+                <button id="addTokenButton" class="small-button">+ Add Token</button>
+            </div>
+
+            <div class="button-group">
+                <button id="fetchButton" class="primary">Fetch Stargazers</button>
+                <button id="exportButton" class="secondary" disabled>Export to CSV</button>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="status" class="status-message">Ready to fetch stargazers</div>
+
+        <div class="stargazers-grid" id="stargazersList"></div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
