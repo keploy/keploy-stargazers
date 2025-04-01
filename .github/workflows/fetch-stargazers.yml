@@ -1,0 +1,52 @@
+name: Fetch GitHub Stargazers
+
+on:
+  schedule:
+    # Run every day at midnight UTC
+    - cron: '0 0 * * *'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  fetch-stargazers:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Fetch stargazers
+      run: node fetch-stargazers.js
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # If you want to fetch for a different repository, you can specify it here
+        # GITHUB_REPOSITORY: keploy/other-repo
+    
+    - name: Commit and push changes
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        
+        # Check if there are changes to commit
+        if git diff --quiet data/; then
+          echo "No changes to commit"
+          exit 0
+        fi
+        
+        git add data/
+        git commit -m "Update stargazers data [skip ci]"
+        
+        # Push changes
+        git push
+      env:
+        # We need a token with repo scope to push changes
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
