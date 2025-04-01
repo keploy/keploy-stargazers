@@ -1,181 +1,198 @@
-const GITHUB_API_URL = "https://api.github.com";
-const BATCH_SIZE = 50;
+const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
+
+let GITHUB_TOKENS=[];
+
+
+let currentTokenIndex = 0;
 const DELAY_BETWEEN_REQUESTS = 2000;
+const CACHE_KEY = "cachedStargazers";
 
-document.getElementById("fetch-button").addEventListener("click", async () => {
-  await fetchStargazers(false);
-});
+// Helper: Rotate API Tokens
+function getNextToken() {
+  currentTokenIndex = (currentTokenIndex + 1) % GITHUB_TOKENS.length;
+  return GITHUB_TOKENS[currentTokenIndex];
+}
 
-document.getElementById("fetch-last-24h").addEventListener("click", async () => {
-  await fetchStargazers(true);
-});
+// Helper: Cache Stargazers
+function cacheStargazers(stargazers) {
+  localStorage.setItem(CACHE_KEY, JSON.stringify(stargazers));
+}
 
-async function fetchStargazers(last24Hours = false) {
-  const repoUrl = document.getElementById("repo-url").value;
-  const githubToken = document.getElementById("github-token").value;
-  const repoPath = extractRepoPath(repoUrl);
+// Helper: Get Cached Stargazers
+function getCachedStargazers() {
+  return JSON.parse(localStorage.getItem(CACHE_KEY)) || [];
+}
 
-  if (!repoPath || !githubToken) {
-    alert("Invalid GitHub repository URL or token");
-    return;
-  }
+// Fetch Stargazers using GraphQL
+async function fetchStargazers(repoPath, last24Hours = false) {
 
+  let [owner, repo] = repoPath.split("/");
+  let stargazers = [];
+  let afterCursor = null;
+  let githubToken = getNextToken();
   document.getElementById("loading").style.display = "block";
-  document.getElementById("fetch-button").disabled = true;
-  document.getElementById("fetch-last-24h").disabled = true;
-  document.getElementById("download-link").style.display = "none";
-  document.getElementById("export-excel").style.display = "none";
 
   try {
-    let stargazers = await fetchAllStargazers(repoPath, githubToken);
+    while (true) {
+      const query = {
+        query: `
+          query($owner: String!, $repo: String!, $after: String) {
+            repository(owner: $owner, name: $repo) {
+              stargazers(first: 100, after: $after) {
+                edges {
+                  node {
+                    login
+                    url
+                    email
+                    company
+                    location
+                    websiteUrl
+                    twitterUsername
+                    bio
+                  }
+                  starredAt
+                }
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+              }
+            }
+          }
+        `,
+        variables: { owner, repo, after: afterCursor ||null},
+      };
 
-    if (last24Hours) {
-      const last24hTimestamp = new Date();
-      last24hTimestamp.setDate(last24hTimestamp.getDate() - 1);
-      
-      stargazers = stargazers.filter(star => new Date(star.starred_at) >= last24hTimestamp);
+      const response = await fetchWithBackoff(GITHUB_GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(query),
+      });
+
+      const data = await response.json();
+      if (!data.data || !data.data.repository) break;
+
+      let fetchedStargazers = data.data.repository.stargazers.edges.map((s) => ({
+        username: s.node.login,
+        profile_url: s.node.url,
+        email: s.node.email || "N/A",
+        company: s.node.company || "N/A",
+        location: s.node.location || "N/A",
+        website: s.node.websiteUrl || "N/A",
+        linkedin: extractLinkedIn(s.node),
+        twitter: s.node.twitterUsername ? `https://twitter.com/${s.node.twitterUsername}` : "N/A",
+        bio: s.node.bio || "N/A",
+        starred_at: s.starredAt,
+      }));
+
+      if (last24Hours) {
+        const last24hTimestamp = new Date();
+        last24hTimestamp.setDate(last24hTimestamp.getDate() - 1);
+        fetchedStargazers = fetchedStargazers.filter((s) => new Date(s.starred_at) >= last24hTimestamp);
+      }
+
+      stargazers = [...stargazers, ...fetchedStargazers];
+
+      if (!data.data.repository.stargazers.pageInfo.hasNextPage) break;
+      afterCursor = data.data.repository.stargazers.pageInfo.endCursor;
     }
 
-    const enrichedStargazers = await enrichStargazersInBatches(stargazers, githubToken);
-    const csvData = generateCSV(enrichedStargazers);
-    downloadCSV(csvData, last24Hours ? "stargazers_last_24h.csv" : "stargazers.csv");
-
+    cacheStargazers(stargazers);
+    generateCSV(stargazers);
     document.getElementById("download-link").style.display = "block";
-    document.getElementById("export-excel").style.display = "block";
-
-    document.getElementById("export-excel").addEventListener("click", () => exportToExcel(enrichedStargazers));
   } catch (error) {
     console.error("Error fetching stargazers:", error);
-    alert("Failed to fetch stargazers. Check the console for details.");
+    alert("Failed to fetch stargazers. Check the console.");
   } finally {
+    console.log("🔹 Stargazers Data Fetched:", stargazers);
+
     document.getElementById("loading").style.display = "none";
-    document.getElementById("fetch-button").disabled = false;
-    document.getElementById("fetch-last-24h").disabled = false;
   }
 }
 
-function extractRepoPath(url) {
-  const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
-  return match ? match[1] : null;
-}
+// Exponential Backoff for API Requests
+async function fetchWithBackoff(url, options, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
 
-async function fetchAllStargazers(repoPath, githubToken) {
-  let stargazers = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const response = await fetch(`${GITHUB_API_URL}/repos/${repoPath}/stargazers?page=${page}&per_page=100`, {
-      headers: {
-        Authorization: `token ${githubToken}`,
-        Accept: "application/vnd.github.v3.star+json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch stargazers: ${response.statusText}`);
+      const response = await fetch(url, options);
+      if (response.status === 403) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        delay *= 2;
+        continue;
+      }
+      return response;
+    } catch (error) {
+      console.error(`Request failed, retrying... (${i + 1})`, error);
     }
-
-    const data = await response.json();
-    stargazers = stargazers.concat(data);
-    hasMore = data.length === 100;
-    page++;
   }
-
-  return stargazers;
+  throw new Error("Failed after retries");
 }
 
-async function enrichStargazersInBatches(stargazers, githubToken) {
-  const enrichedStargazers = [];
-
-  for (let i = 0; i < stargazers.length; i += BATCH_SIZE) {
-    const batch = stargazers.slice(i, i + BATCH_SIZE);
-    const enrichedBatch = await Promise.all(
-      batch.map(async (stargazer) => {
-        const userDetails = await fetchUserDetailsWithRetry(stargazer.user.login, githubToken);
-        return {
-          username: stargazer.user.login,
-          profile_url: stargazer.user.html_url,
-          email: userDetails.email || "N/A",
-          company: userDetails.company || "N/A",
-          location: userDetails.location || "N/A",
-          website: userDetails.blog || "N/A",
-          linkedin: extractLinkedIn(userDetails),
-          twitter: userDetails.twitter_username ? `https://twitter.com/${userDetails.twitter_username}` : "N/A",
-          bio: userDetails.bio || "N/A",
-        };
-      })
-    );
-
-    enrichedStargazers.push(...enrichedBatch);
-    await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
-  }
-
-  return enrichedStargazers;
-}
-
-function extractLinkedIn(userDetails) {
-  if (userDetails.blog && userDetails.blog.includes("linkedin.com")) {
-    return userDetails.blog;
+// Extract LinkedIn from Website URL
+function extractLinkedIn(user) {
+  if (user.website && user.website.includes("linkedin.com")) {
+    return user.website;
   }
   return "N/A";
 }
 
-async function fetchUserDetailsWithRetry(username, githubToken, retries = 3) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(`${GITHUB_API_URL}/users/${username}`, {
-        headers: { Authorization: `token ${githubToken}` },
-      });
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          await new Promise((resolve) => setTimeout(resolve, 60000));
-          continue;
-        }
-        throw new Error(`Failed to fetch user details for ${username}: ${response.statusText}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error(`Attempt ${attempt} failed for ${username}:`, error);
-      if (attempt === retries) throw error;
-      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_REQUESTS));
-    }
-  }
-}
-
+// Convert Stargazers to CSV and Download
 function generateCSV(stargazers) {
   const headers = ["Username", "GitHub URL", "Email", "Company", "Location", "Website", "LinkedIn", "Twitter", "Bio"];
-  const rows = stargazers.map(stargazer => [
-    stargazer.username,
-    stargazer.profile_url,
-    stargazer.email,
-    stargazer.company,
-    stargazer.location,
-    stargazer.website,
-    stargazer.linkedin,
-    stargazer.twitter,
-    stargazer.bio,
+  const rows = stargazers.map((s) => [
+    s.username,
+    s.profile_url,
+    s.email,
+    s.company,
+    s.location,
+    s.website,
+    s.linkedin,
+    s.twitter,
+    s.bio,
   ]);
 
-  const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
-  return csvContent;
-}
-
-function downloadCSV(csvContent, filename) {
+  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = filename;
+  link.download = "stargazers.csv";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
-function exportToExcel(stargazers) {
-  const ws = XLSX.utils.json_to_sheet(stargazers);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Stargazers");
-  XLSX.writeFile(wb, "stargazers.xlsx");
+// Event Listeners
+
+
+document.getElementById("fetch-button").addEventListener("click", () => {
+  const repoUrl = document.getElementById("repo-url").value;
+  const repoPath = extractRepoPath(repoUrl);
+  const tokenInput = document.getElementById("github-token");
+  if (!tokenInput) return alert("GitHub token input not found!");
+
+  GITHUB_TOKENS = tokenInput.value.trim().split(",").map(token=>token.trim());
+  if (!repoPath) return alert("Invalid GitHub URL");
+  fetchStargazers(repoPath, false);
+});
+
+document.getElementById("fetch-last-24h").addEventListener("click", () => {
+  const repoUrl = document.getElementById("repo-url").value;
+  const repoPath = extractRepoPath(repoUrl);
+  const tokenInput = document.getElementById("github-token");
+  if (!tokenInput) return alert("GitHub token input not found!");
+
+  GITHUB_TOKENS = tokenInput.value.trim().split(",").map(token=>token.trim());
+
+  if (!repoPath) return alert("Invalid GitHub URL");
+  fetchStargazers(repoPath, true);
+});
+
+// Extract Repository Path
+function extractRepoPath(url) {
+  const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
+  return match ? match[1] : null;
 }
