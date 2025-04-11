@@ -24,15 +24,15 @@ import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
-  const [githubToken, setGithubToken] = useState("");
-  const [showToken, setShowToken] = useState(false);
+  const [githubTokens, setGithubTokens] = useState("");
+  const [showTokens, setShowTokens] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stargazers, setStargazers] = useState<any[]>([]);
   const [last24Hours, setLast24Hours] = useState<boolean>(false);
   const [hasFetched, setHasFetched] = useState(false);
 
   const handleFetchStargazers = async (last24Hours = false) => {
-    if (!repoUrl || !githubToken) {
+    if (!repoUrl || !githubTokens) {
       alert("Invalid GitHub repository URL or token");
       return;
     }
@@ -42,7 +42,7 @@ export default function Home() {
     try {
       const repoPath = extractRepoPath(repoUrl);
       if (!repoPath) throw new Error("Invalid repository URL");
-      let stargazers = await fetchAllStargazers(repoPath, githubToken);
+      let stargazers = await fetchAllStargazers(repoPath, githubTokens);
 
       if (last24Hours) {
         const last24hTimestamp = new Date();
@@ -52,10 +52,7 @@ export default function Home() {
         );
       }
 
-      const enrichedStargazers = await enrichStargazers(
-        stargazers,
-        githubToken
-      );
+      const enrichedStargazers = await enrichStargazers(stargazers, githubTokens);
       setStargazers(enrichedStargazers);
     } catch (error) {
       console.error(error);
@@ -86,21 +83,21 @@ export default function Home() {
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="name" className="text-[#C9D1D9]">Your Personal Token</Label>
+                <Label htmlFor="name" className="text-[#C9D1D9]">Your Personal Tokens</Label>
                 <div className="relative w-full max-w-md">
                   <Input
-                    type={showToken ? "text" : "password"}
-                    placeholder="Enter GitHub Token"
-                    value={githubToken}
-                    onChange={(e) => setGithubToken(e.target.value)}
+                    type={showTokens ? "text" : "password"}
+                    placeholder="Enter GitHub Tokens (comma-separated, at least one required e.g., ghp_token1, ghp_token2)"
+                    value={githubTokens}
+                    onChange={(e) => setGithubTokens(e.target.value)}
                     className="border p-2 w-full bg-[#0D1117] text-white"
                   />
                   <button
                     type="button"
                     className="absolute inset-y-0 right-2 flex items-center"
-                    onClick={() => setShowToken(!showToken)}
+                    onClick={() => setShowTokens(!showTokens)}
                   >
-                    {showToken ? <Eye size={20} className="text-white"  /> : <EyeOff size={20} className="text-white" />}
+                    {showTokens ? <Eye size={20} className="text-white"  /> : <EyeOff size={20} className="text-white" />}
                   </button>
                 </div>
               </div>

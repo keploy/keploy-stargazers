@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as XLSX from "xlsx";
 import { Button } from "../ui/button";
+import { generateCSV } from "@/lib/csv";
+import { Download } from "lucide-react";
 
 interface DataExportProps {
   stargazers: any[];
@@ -9,41 +11,8 @@ interface DataExportProps {
 }
 
 const DataExport: React.FC<DataExportProps> = ({ stargazers, last24Hours, setLast24Hours }) => {
-  const exportToCSV = () => {
-    const headers = [
-      "Username",
-      "GitHub URL",
-      "Email",
-      "Company",
-      "Location",
-      "Website",
-      "Linkedin",
-      "Twitter",
-      "Bio",
-    ];
-    const DataHeaders =  [
-      "username",
-      "profile_url",
-      "email",
-      "company",
-      "location",
-      "Website",
-      "LinkedIn",
-      "Twitter",
-      "Bio",
-    ]
-    const rows = stargazers.map((s) =>
-      DataHeaders.map((header) => {
-        const value = s[header] ?? "N/A";
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(",")
-    );
-    const csvContent = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = last24Hours ? "stargazers_last_24_hrs.csv" : "stargazers.csv";
-    link.click();
+  const handleCSVExport = () => {
+    generateCSV(stargazers);
     setLast24Hours(false);
   };
 
@@ -56,11 +25,21 @@ const DataExport: React.FC<DataExportProps> = ({ stargazers, last24Hours, setLas
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4 w-full">
-      <Button onClick={exportToCSV} className="bg-green-500 text-white p-2 w-full">
+    <div className="flex flex-col space-y-2 w-full">
+      <Button
+        onClick={handleCSVExport}
+        variant="outline"
+        className="w-full"
+      >
+        <Download className="mr-2 h-4 w-4" />
         Download CSV
       </Button>
-      <Button onClick={exportToExcel} className="bg-green-500 text-white p-2 w-full">
+      <Button
+        onClick={exportToExcel}
+        variant="outline"
+        className="w-full"
+      >
+        <Download className="mr-2 h-4 w-4" />
         Export to Excel
       </Button>
     </div>
